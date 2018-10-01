@@ -46,16 +46,26 @@ window.onload = function(){
 
         guardar();
     });
-    this.document.getElementById("btnUpload").addEventListener("click",function(){
+   /* this.document.getElementById("btnUpload").addEventListener("click",function(){
 
         upload();
-    });
+    });*/
     $('form').on('submit', function(e){
         e.preventDefault();  
     });
     $('#txtFile').on('change',function(e){
        // $("#imgFoto").attr("src",$('#txtFile').val()); //esto lo puedo hacer si hago workaround para
        //cargar archivos locales en mi pagina. primero hago el upload
+       if (e.target.files && e.target.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function (e) {
+          $('#imgFoto')
+            .attr('src', e.target.result)
+            .width(150);
+           // .height(200);
+        };
+        reader.readAsDataURL(e.target.files[0]);
+      }
     });
     cargarDatos();
 
@@ -158,9 +168,10 @@ function enviarModificacion(data){
 }
 
 function limpiarFormulario(){
-    document.getElementById("txtTitulo").value = "";
+    /*document.getElementById("txtTitulo").value = "";
     document.getElementById("txtArticulo").value = "";
-    document.getElementById("txtMas").value = "";
+    document.getElementById("txtMas").value = "";*/
+    document.getElementById("btnReset").click();
 }
 function enviarAlta(data){
     $.ajax({
