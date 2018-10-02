@@ -15,13 +15,18 @@ var storage = multer.diskStorage({
   })
 
 
-app.use(express.static(__dirname));
+//app.use(express.static(__dirname));
+app.use(express.static(__dirname, {index: 'login.html'}))
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 app.get('/admin.html',function(){
     console.log("pide admin.html");
+});
+
+app.get('/',function(req,res){
+    res.sendFile(__dirname + '/login.html');
 });
 
 app.get('/login',function(req,res){
@@ -42,6 +47,21 @@ io.on('connection', function(socket){
     })
   });
 
+  app.post('/validate',verifyToken, function (req, res) {
+          
+    jwt.verify(req.token,'secretKey', (error,authData)=>{
+        if(error){
+            res.sendStatus(403);
+        }
+        else{
+
+                setTimeout(function(){res.send("OK");    },0);
+            }
+           
+    });  
+        
+});
+
   app.post('/login', function (req, res) {
     //MOCK USER
     var u = req.body;
@@ -56,7 +76,8 @@ io.on('connection', function(socket){
 
            var array = JSON.parse(data);
            array = array.filter(function(a){
-             return a.active == true && a.password == u['data[password]'] && a.name == u['data[usuario]'];
+             //return a.active == true && a.password == u['data[password]'] && a.name == u['data[usuario]'];
+             return a.active == true && a.password == u.data.password && a.name == u.data.usuario;
            });
            
            if(array.length==0){
@@ -103,7 +124,7 @@ app.get('/traer', function (req, res) {
 
            var array = JSON.parse(data);
            array = array.filter(function(a){
-             return a.active == true;
+             return a.active == true || a.active == "true";
            });
            
            setTimeout(function(){res.send({"message": "Carga exitosa","data":array});},5000);
@@ -143,7 +164,10 @@ app.post('/agregar',verifyToken,multer({storage: storage}).single('txtFile'), fu
     //codigo para subir archivo
     var collection = req.body.collection;
     var nuevoObjeto = req.body;
-    nuevoObjeto.foto = req.file.filename;
+    if(req.file != undefined){
+        nuevoObjeto.foto = req.file.filename;
+    }
+    
     /*var upload = multer({
 		storage: storage
     }).single('txtFile')
@@ -183,8 +207,11 @@ app.post('/agregar',verifyToken,multer({storage: storage}).single('txtFile'), fu
     });
 });
 
-app.post('/modificar', function (req, res) {
+app.post('/modificar',verifyToken,multer({storage: storage}).single('txtFile'), function (req, res) {
     var object = req.body;
+    if(req.file != undefined){
+        object.foto = req.file.filename;
+    }
     var array = new Array();
     require('fs').readFile(__dirname + getPathFromCollection(req.body.collection), 'utf8', function (err, data) {
         if (err) {
@@ -192,7 +219,7 @@ app.post('/modificar', function (req, res) {
         }
            array = JSON.parse(data);
            //obtengo index del id que necesito
-           var index = array.findIndex(function(obj){return obj.id === object.id;})
+           var index = array.findIndex(function(obj){return obj.id === object.id || obj.id.toString() === object.id;})
            array[index] = object;
 
           require('fs').writeFileSync(__dirname + getPathFromCollection(req.body.collection), JSON.stringify(array));

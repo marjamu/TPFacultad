@@ -3,42 +3,39 @@ var datos = new Array();
 var postAModificar;
 
 //lo primero que hago es preguntar si hay localStorage.
-/*if(localStorage){
+if(localStorage){
     if(localStorage.token){
+        //envio una peticion para ver si el token es valido
         validateUser(localStorage.token);
     }
-}*/
+    else{
+        //si quieren acceder directamente a "admin" sin permisos, se redirecciona a accessdenied
+        alert("No tiene permisos suficientes");
+        window.location.replace("http://localhost:3000/accessdenied.html");
+    }
+}
 
 function validateUser(token){
-    $.ajax({
-        url: "http://localhost:3000/login", 
-        method:'POST',
-        headers:{
-            'authorization' : token
-        },
-        success: function(result,status,response){
-            //si pudo logearse, existe token
-            //tiene rol de admin?
-            if(result.user.role ==="admin"){
-                console.log(result.message);
-                //si está clickeado "recordarme", lo guardo:
-                if($("input:checkbox").val()==="on"){
-                    localStorage.token = result.token;
-                }
-                window.location.replace(response.getResponseHeader('redirect'));
-            }
-            else{
-                alert("No tiene permisos suficientes");
-            }
-            
-        },
-        error: function(jqXHR,textStatus,errorThrown ){
-            console.log(errorThrown);
-        },
-        complete:function(jqXHR, textStatus){
-            console.log(textStatus);
-        }
-    });
+    xhr = new XMLHttpRequest();
+ xhr.onreadystatechange = function() {
+     if (this.readyState == 4) {
+         if(this.status == 200){
+             if(xhr.responseText == "OK"){
+                 alert("Permisos OK");
+             }
+         }
+         else{
+             alert("No tiene permisos suficientes");
+             window.location.replace("http://localhost:3000/accessdenied.html");
+         }
+     }
+     
+ };
+ 
+ xhr.open("POST", "http://localhost:3000/validate", true);
+ xhr.setRequestHeader("authorization", token);
+ xhr.send("");
+
 }
 
 window.onload = function(){
@@ -46,6 +43,10 @@ window.onload = function(){
 
         guardar();
     });
+    document.getElementById("btnLogOff").onclick = function(){
+        localStorage.removeItem("token");
+        window.location.replace("http://localhost:3000/")
+    }
    /* this.document.getElementById("btnUpload").addEventListener("click",function(){
 
         upload();
@@ -54,13 +55,12 @@ window.onload = function(){
         e.preventDefault();  
     });
     $('#txtFile').on('change',function(e){
-       // $("#imgFoto").attr("src",$('#txtFile').val()); //esto lo puedo hacer si hago workaround para
-       //cargar archivos locales en mi pagina. primero hago el upload
        if (e.target.files && e.target.files[0]) {
         var reader = new FileReader();
         reader.onload = function (e) {
           $('#imgFoto')
             .attr('src', e.target.result)
+            .attr('display','block')
             .width(150);
            // .height(200);
         };
@@ -112,6 +112,8 @@ function guardar(){
             var data;
             //es modificacion o alta?
             if(postAModificar){
+                //ya no paso data, sino formData
+                /*
                 data = {
                     "titulo": titulo.value,
                     "articulo": articulo.value,
@@ -120,18 +122,24 @@ function guardar(){
                     "id": postAModificar.id,
                     "active" : postAModificar.active,
                     "created_dttm" : postAModificar.created_dttm
-                }
-                enviarModificacion(data);
+                }*/
+                formData.append("collection","posts");
+                formData.append("id",postAModificar.id);
+                formData.append("active",postAModificar.active);
+                formData.append("created_dttm",postAModificar.created_dttm);
+                enviarModificacion(formData);
+                //enviarModificacion(data);
             }
             else{
                 //es nuevo. no tiene ID
-                data = {
+               /* data = {
                     "titulo": titulo.value,
                     "articulo": articulo.value,
                     "mas": mas.value,
                     "collection": "posts"
-                }
+                }*/
                 formData.append("collection","posts");
+                //muestro por consola las claves de formData
                 for (var [key, value] of formData.entries()) { 
                     console.log(key, value);
                   }
@@ -149,6 +157,8 @@ function enviarModificacion(data){
         url: "http://localhost:3000/modificar", 
         method:'POST',
         data:data,
+        contentType: false,
+        processData: false,
         headers:{
             'authorization' : localStorage.token
         },
@@ -172,12 +182,15 @@ function limpiarFormulario(){
     document.getElementById("txtArticulo").value = "";
     document.getElementById("txtMas").value = "";*/
     document.getElementById("btnReset").click();
+    document.getElementById("imgFoto").style.display = "none";
 }
 function enviarAlta(data){
     $.ajax({
         url: "http://localhost:3000/agregar", 
         method:'POST',
+        //agrego contentType: false cuando tengo un mime type multipart/form-data con archivo incluido
         contentType: false,
+        //agrego processData: false para que no quiera convertir a string formData a string
         processData: false,
         data:data,
         headers:{
@@ -250,10 +263,13 @@ function borrar(id){
 
 function modificar(id){
     //obtengo el post que hay que modificar
-    postAModificar = datos.find(x => x.id === id);
+    postAModificar = datos.find(x => x.id === id || x.id == id.toString());
     document.getElementById("txtTitulo").value = postAModificar.titulo;
     document.getElementById("txtArticulo").value = postAModificar.articulo;
     document.getElementById("txtMas").value = postAModificar.mas;
+    document.getElementById("imgFoto").src = "http://localhost:3000/uploads/"+postAModificar.foto;
+    document.getElementById("imgFoto").style.display = "block";
+    document.getElementById("imgFoto").style.width = "150px";
      
     
 }

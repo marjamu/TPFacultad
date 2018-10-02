@@ -1,46 +1,120 @@
-window.onload = function(){
 
-    $('form').on('submit', function(e){
-        e.preventDefault();  
+$(function() {
+
+    $(".input input").focus(function() {
+ 
+       $(this).parent(".input").each(function() {
+          $("label", this).css({
+             "line-height": "18px",
+             "font-size": "18px",
+             "font-weight": "100",
+             "top": "0px"
+          })
+          $(".spin", this).css({
+             "width": "100%"
+          })
+       });
+    }).blur(function() {
+       $(".spin").css({
+          "width": "0px"
+       })
+       if ($(this).val() == "") {
+          $(this).parent(".input").each(function() {
+             $("label", this).css({
+                "line-height": "60px",
+                "font-size": "24px",
+                "font-weight": "300",
+                "top": "10px"
+             })
+          });
+ 
+       }
     });
-
-    $("#btnLogIn").click(function(e){;
-        login();
+ 
+    $(".button").click(function(e) {
+       var pX = e.pageX,
+          pY = e.pageY,
+          oX = parseInt($(this).offset().left),
+          oY = parseInt($(this).offset().top);
+ 
+       $(this).append('<span class="click-efect x-' + oX + ' y-' + oY + '" style="margin-left:' + (pX - oX) + 'px;margin-top:' + (pY - oY) + 'px;"></span>')
+       $('.x-' + oX + '.y-' + oY + '').animate({
+          "width": "500px",
+          "height": "500px",
+          "top": "-250px",
+          "left": "-250px",
+ 
+       }, 600);
+       $("button", this).addClass('active');
+    })
+ 
+    $(".alt-2").click(function() {
+       if (!$(this).hasClass('material-button')) {
+          $(".shape").css({
+             "width": "100%",
+             "height": "100%",
+             "transform": "rotate(0deg)"
+          })
+ 
+          setTimeout(function() {
+             $(".overbox").css({
+                "overflow": "initial"
+             })
+          }, 600)
+ 
+          $(this).animate({
+             "width": "140px",
+             "height": "140px"
+          }, 500, function() {
+             $(".box").removeClass("back");
+ 
+             $(this).removeClass('active')
+          });
+ 
+          $(".overbox .title").fadeOut(300);
+          $(".overbox .input").fadeOut(300);
+          $(".overbox .button").fadeOut(300);
+ 
+          $(".alt-2").addClass('material-buton');
+       }
+ 
+    })
+ 
+    $(".material-button").click(function() {
+ 
+       if ($(this).hasClass('material-button')) {
+          setTimeout(function() {
+             $(".overbox").css({
+                "overflow": "hidden"
+             })
+             $(".box").addClass("back");
+          }, 200)
+          $(this).addClass('active').animate({
+             "width": "700px",
+             "height": "700px"
+          });
+ 
+          setTimeout(function() {
+             $(".shape").css({
+                "width": "50%",
+                "height": "50%",
+                "transform": "rotate(45deg)"
+             })
+ 
+             $(".overbox .title").fadeIn(300);
+             $(".overbox .input").fadeIn(300);
+             $(".overbox .button").fadeIn(300);
+          }, 700)
+ 
+          $(this).removeClass('material-button');
+ 
+       }
+ 
+       if ($(".alt-2").hasClass('material-buton')) {
+          $(".alt-2").removeClass('material-buton');
+          $(".alt-2").addClass('material-button');
+       }
+ 
     });
-
-};
-
-function login(){
-    data = {
-        "usuario": $("#txtUsuario").val(),
-        "password": $("#txtPassword").val()
-    };
-    $.ajax({
-        url: "http://localhost:3000/login", 
-        method:'POST',
-        data:{"collection":"users",
-                "data":data},
-        success: function(result,status,response){
-            //si pudo logearse, existe token
-            //tiene rol de admin?
-            if(result.user.role ==="admin"){
-                console.log(result.message);
-                //si está clickeado "recordarme", lo guardo:
-                if($("input:checkbox").val()==="on"){
-                    localStorage.token = result.token;
-                }
-                window.location.replace(response.getResponseHeader('redirect'));
-            }
-            else{
-                alert("No tiene permisos suficientes");
-            }
-            
-        },
-        error: function(jqXHR,textStatus,errorThrown ){
-            console.log(errorThrown);
-        },
-        complete:function(jqXHR, textStatus){
-            console.log(textStatus);
-        }
-    });
-}
+ 
+ });
