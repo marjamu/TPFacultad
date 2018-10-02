@@ -212,20 +212,26 @@ app.post('/modificar',verifyToken,multer({storage: storage}).single('txtFile'), 
     if(req.file != undefined){
         object.foto = req.file.filename;
     }
-    var array = new Array();
-    require('fs').readFile(__dirname + getPathFromCollection(req.body.collection), 'utf8', function (err, data) {
-        if (err) {
-            // error handling
+    jwt.verify(req.token,'secretKey', (error,authData)=>{
+        if(error){
+            res.sendStatus(403);
         }
-           array = JSON.parse(data);
-           //obtengo index del id que necesito
-           var index = array.findIndex(function(obj){return obj.id === object.id || obj.id.toString() === object.id;})
-           array[index] = object;
+        else{
+            var array = new Array();
+            require('fs').readFile(__dirname + getPathFromCollection(req.body.collection), 'utf8', function (err, data) {
+                if (err) {
+                    // error handling
+                }
+                array = JSON.parse(data);
+                //obtengo index del id que necesito
+                var index = array.findIndex(function(obj){return obj.id === object.id || obj.id.toString() === object.id;})
+                array[index] = object;
 
-          require('fs').writeFileSync(__dirname + getPathFromCollection(req.body.collection), JSON.stringify(array));
-          res.send('Modificacion exitosa'); 
-    });  
- 
+                require('fs').writeFileSync(__dirname + getPathFromCollection(req.body.collection), JSON.stringify(array));
+                res.send('Modificacion exitosa'); 
+            });
+        }
+    });
 });
 
 function getPathFromCollection(collection){

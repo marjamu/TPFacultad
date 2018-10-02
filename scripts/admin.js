@@ -57,9 +57,10 @@ window.onload = function(){
     $('#txtFile').on('change',function(e){
        if (e.target.files && e.target.files[0]) {
         var reader = new FileReader();
-        reader.onload = function (e) {
+        reader.onload = function (arg) {
+            console.log(reader.result);//Check Base64 string
           $('#imgFoto')
-            .attr('src', e.target.result)
+            .attr('src', reader.result)//.attr('src', arg.target.result) tambien funciona
             .attr('display','block')
             .width(150);
            // .height(200);
@@ -101,9 +102,9 @@ function guardar(){
         //miro localStorage
         var formData = new FormData($("form")[0]);
         
-    if(localStorage){
-        var token = localStorage.token;
-        if(token){
+   // if(localStorage){
+        //var token = localStorage.token;
+        //if(token){
             //recupero los valores del dom
             var titulo = document.getElementById("txtTitulo");
             var articulo = document.getElementById("txtArticulo");
@@ -145,11 +146,11 @@ function guardar(){
                   }
                 enviarAlta(formData);
             }   
-        }
-        else{
+       // }
+      /*  else{
             $("#divLogin").modal();
-        }
-    }
+        }*/
+   // }
 }
 
 function enviarModificacion(data){
@@ -163,7 +164,7 @@ function enviarModificacion(data){
             'authorization' : localStorage.token
         },
         success: function(result){
-           console.log(result.message);
+           console.log(result);
            cargarDatos();
            limpiarFormulario();
            postAModificar = null;
@@ -242,7 +243,8 @@ function refrescarTabla(data){
         nuevasFilas += "<td><input type='button' class ='btn btn-danger' value='Borrar' onclick='borrar(" + data[i].id + ");'></td>";
         nuevasFilas += "</tr>";
     }
-    tabla.children[2].innerHTML = nuevasFilas;
+    //tabla.children[1].innerHTML = nuevasFilas;
+    tabla.querySelector("tbody").innerHTML = nuevasFilas;
 }
 
 function borrar(id){
